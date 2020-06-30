@@ -1272,3 +1272,1278 @@ var a = 10;
 
 可以看到，比之前编译的多了很多插件信息，也就是我们的include里面默认的插件。
 
+### `exclude`
+
+`Array<string|RegExp>`, 默认 `[]`.
+
+不需要依赖的插件集合，跟include用法一样，但是作用跟include相反。
+
+### `useBuiltIns`
+
+@babel/preset-env使用polyfill的配置，那么什么是polyfill呢？我们都知道，preset-env会根据浏览器的配置做es的语法转换，但是在实际运行环境中，除了es的语法外，还有一些其它的api，比如我们需要用到Promise对象，比如我们需要用到Array.prototype.includes方法等等，所以需要我们在当前运行环境中添加Promise和Array.prototype.includes方法，让当前的js代码能够运行在当前环境。
+
+当`useBuiltIns`的值为entry或者usage的时候，@babel-preset-env会直接依赖core-js做polyfill
+
+自从babel在7.4.0版本后弃用了@babel/polyfill后，babel建议我们直接使用core-js并且设置corejs的版本来替换polyfill。
+
+#### `useBuiltIns: 'entry'`
+
+当我们使用entry的时候，会根据当前浏览器的配置信息来加载core-js的插件，最后动态替换掉源码中的
+
+- ```
+  import "core-js";
+  ```
+
+- ```
+  import "@babel/polyfill";
+  ```
+
+两种形式的代码块。
+
+比如我们demo中，我们修改一下配置文件：
+
+babel.config.js：
+
+```js
+module.exports = {
+    presets: [
+        [
+            "@babel/preset-env",
+            {
+                corejs: 3,
+                useBuiltIns: 'entry',
+
+            }
+        ]
+    ]
+};
+```
+
+然后我们修改一下浏览器配置信息为默认：
+
+.browserslistrc
+
+```js
+> 0.25%, not dead
+```
+
+然后我们在src中创建一个叫demo-entry.js的文件测试：
+
+src/demo-entry.js：
+
+```js
+const fn = () => {};
+
+new Promise(() => {});
+
+class Test {
+    say(){}
+}
+
+const c = [1, 2, 3].includes(1);
+var a = 10;
+
+```
+
+我们直接运行babel命令：
+
+```js
+npx babel ./src/demo-entry.js -o lib/demo-entry.js
+```
+
+lib/demo-entry.js:
+
+```js
+"use strict";
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var fn = function fn() {};
+
+new Promise(function () {});
+
+var Test = /*#__PURE__*/function () {
+  function Test() {
+    _classCallCheck(this, Test);
+  }
+
+  _createClass(Test, [{
+    key: "say",
+    value: function say() {}
+  }]);
+
+  return Test;
+}();
+
+var c = [1, 2, 3].includes(1);
+var a = 10;
+
+```
+
+可以看到，除了转换了一些语法类的东西外并没有添加polyfill（Promise、includes等等）
+
+那么我们设置了usage后，怎样才会起作用呢？我们改一下demo-entry.js文件的代码，
+
+demo-entry.js：
+
+```js
+
+const fn = () => {};
+
+new Promise(() => {});
+
+class Test {
+    say(){}
+}
+
+const c = [1, 2, 3].includes(1);
+var a = 10;
+
+```
+
+然后我们再次运行babel看结果：
+
+```js
+"use strict";
+
+require("core-js/modules/es.symbol");
+
+require("core-js/modules/es.symbol.description");
+
+require("core-js/modules/es.symbol.async-iterator");
+
+require("core-js/modules/es.symbol.has-instance");
+
+require("core-js/modules/es.symbol.is-concat-spreadable");
+
+require("core-js/modules/es.symbol.iterator");
+
+require("core-js/modules/es.symbol.match");
+
+require("core-js/modules/es.symbol.replace");
+
+require("core-js/modules/es.symbol.search");
+
+require("core-js/modules/es.symbol.species");
+
+require("core-js/modules/es.symbol.split");
+
+require("core-js/modules/es.symbol.to-primitive");
+
+require("core-js/modules/es.symbol.to-string-tag");
+
+require("core-js/modules/es.symbol.unscopables");
+
+require("core-js/modules/es.array.concat");
+
+require("core-js/modules/es.array.copy-within");
+
+require("core-js/modules/es.array.every");
+
+require("core-js/modules/es.array.fill");
+
+require("core-js/modules/es.array.filter");
+
+require("core-js/modules/es.array.find");
+
+require("core-js/modules/es.array.find-index");
+
+require("core-js/modules/es.array.flat");
+
+require("core-js/modules/es.array.flat-map");
+
+require("core-js/modules/es.array.for-each");
+
+require("core-js/modules/es.array.from");
+
+require("core-js/modules/es.array.includes");
+
+require("core-js/modules/es.array.index-of");
+
+require("core-js/modules/es.array.iterator");
+
+require("core-js/modules/es.array.join");
+
+require("core-js/modules/es.array.last-index-of");
+
+require("core-js/modules/es.array.map");
+
+require("core-js/modules/es.array.of");
+
+require("core-js/modules/es.array.reduce");
+
+require("core-js/modules/es.array.reduce-right");
+
+require("core-js/modules/es.array.slice");
+
+require("core-js/modules/es.array.some");
+
+require("core-js/modules/es.array.sort");
+
+require("core-js/modules/es.array.species");
+
+require("core-js/modules/es.array.splice");
+
+require("core-js/modules/es.array.unscopables.flat");
+
+require("core-js/modules/es.array.unscopables.flat-map");
+
+require("core-js/modules/es.array-buffer.constructor");
+
+require("core-js/modules/es.date.to-primitive");
+
+require("core-js/modules/es.function.has-instance");
+
+require("core-js/modules/es.function.name");
+
+require("core-js/modules/es.json.to-string-tag");
+
+require("core-js/modules/es.map");
+
+require("core-js/modules/es.math.acosh");
+
+require("core-js/modules/es.math.asinh");
+
+require("core-js/modules/es.math.atanh");
+
+require("core-js/modules/es.math.cbrt");
+
+require("core-js/modules/es.math.clz32");
+
+require("core-js/modules/es.math.cosh");
+
+require("core-js/modules/es.math.expm1");
+
+require("core-js/modules/es.math.fround");
+
+require("core-js/modules/es.math.hypot");
+
+require("core-js/modules/es.math.imul");
+
+require("core-js/modules/es.math.log10");
+
+require("core-js/modules/es.math.log1p");
+
+require("core-js/modules/es.math.log2");
+
+require("core-js/modules/es.math.sign");
+
+require("core-js/modules/es.math.sinh");
+
+require("core-js/modules/es.math.tanh");
+
+require("core-js/modules/es.math.to-string-tag");
+
+require("core-js/modules/es.math.trunc");
+
+require("core-js/modules/es.number.constructor");
+
+require("core-js/modules/es.number.epsilon");
+
+require("core-js/modules/es.number.is-finite");
+
+require("core-js/modules/es.number.is-integer");
+
+require("core-js/modules/es.number.is-nan");
+
+require("core-js/modules/es.number.is-safe-integer");
+
+require("core-js/modules/es.number.max-safe-integer");
+
+require("core-js/modules/es.number.min-safe-integer");
+
+require("core-js/modules/es.number.parse-float");
+
+require("core-js/modules/es.number.parse-int");
+
+require("core-js/modules/es.number.to-fixed");
+
+require("core-js/modules/es.object.assign");
+
+require("core-js/modules/es.object.define-getter");
+
+require("core-js/modules/es.object.define-setter");
+
+require("core-js/modules/es.object.entries");
+
+require("core-js/modules/es.object.freeze");
+
+require("core-js/modules/es.object.from-entries");
+
+require("core-js/modules/es.object.get-own-property-descriptor");
+
+require("core-js/modules/es.object.get-own-property-descriptors");
+
+require("core-js/modules/es.object.get-own-property-names");
+
+require("core-js/modules/es.object.get-prototype-of");
+
+require("core-js/modules/es.object.is");
+
+require("core-js/modules/es.object.is-extensible");
+
+require("core-js/modules/es.object.is-frozen");
+
+require("core-js/modules/es.object.is-sealed");
+
+require("core-js/modules/es.object.keys");
+
+require("core-js/modules/es.object.lookup-getter");
+
+require("core-js/modules/es.object.lookup-setter");
+
+require("core-js/modules/es.object.prevent-extensions");
+
+require("core-js/modules/es.object.seal");
+
+require("core-js/modules/es.object.to-string");
+
+require("core-js/modules/es.object.values");
+
+require("core-js/modules/es.promise");
+
+require("core-js/modules/es.promise.finally");
+
+require("core-js/modules/es.reflect.apply");
+
+require("core-js/modules/es.reflect.construct");
+
+require("core-js/modules/es.reflect.define-property");
+
+require("core-js/modules/es.reflect.delete-property");
+
+require("core-js/modules/es.reflect.get");
+
+require("core-js/modules/es.reflect.get-own-property-descriptor");
+
+require("core-js/modules/es.reflect.get-prototype-of");
+
+require("core-js/modules/es.reflect.has");
+
+require("core-js/modules/es.reflect.is-extensible");
+
+require("core-js/modules/es.reflect.own-keys");
+
+require("core-js/modules/es.reflect.prevent-extensions");
+
+require("core-js/modules/es.reflect.set");
+
+require("core-js/modules/es.reflect.set-prototype-of");
+
+require("core-js/modules/es.regexp.constructor");
+
+require("core-js/modules/es.regexp.exec");
+
+require("core-js/modules/es.regexp.flags");
+
+require("core-js/modules/es.regexp.to-string");
+
+require("core-js/modules/es.set");
+
+require("core-js/modules/es.string.code-point-at");
+
+require("core-js/modules/es.string.ends-with");
+
+require("core-js/modules/es.string.from-code-point");
+
+require("core-js/modules/es.string.includes");
+
+require("core-js/modules/es.string.iterator");
+
+require("core-js/modules/es.string.match");
+
+require("core-js/modules/es.string.pad-end");
+
+require("core-js/modules/es.string.pad-start");
+
+require("core-js/modules/es.string.raw");
+
+require("core-js/modules/es.string.repeat");
+
+require("core-js/modules/es.string.replace");
+
+require("core-js/modules/es.string.search");
+
+require("core-js/modules/es.string.split");
+
+require("core-js/modules/es.string.starts-with");
+
+require("core-js/modules/es.string.trim");
+
+require("core-js/modules/es.string.trim-end");
+
+require("core-js/modules/es.string.trim-start");
+
+require("core-js/modules/es.string.anchor");
+
+require("core-js/modules/es.string.big");
+
+require("core-js/modules/es.string.blink");
+
+require("core-js/modules/es.string.bold");
+
+require("core-js/modules/es.string.fixed");
+
+require("core-js/modules/es.string.fontcolor");
+
+require("core-js/modules/es.string.fontsize");
+
+require("core-js/modules/es.string.italics");
+
+require("core-js/modules/es.string.link");
+
+require("core-js/modules/es.string.small");
+
+require("core-js/modules/es.string.strike");
+
+require("core-js/modules/es.string.sub");
+
+require("core-js/modules/es.string.sup");
+
+require("core-js/modules/es.typed-array.float32-array");
+
+require("core-js/modules/es.typed-array.float64-array");
+
+require("core-js/modules/es.typed-array.int8-array");
+
+require("core-js/modules/es.typed-array.int16-array");
+
+require("core-js/modules/es.typed-array.int32-array");
+
+require("core-js/modules/es.typed-array.uint8-array");
+
+require("core-js/modules/es.typed-array.uint8-clamped-array");
+
+require("core-js/modules/es.typed-array.uint16-array");
+
+require("core-js/modules/es.typed-array.uint32-array");
+
+require("core-js/modules/es.typed-array.copy-within");
+
+require("core-js/modules/es.typed-array.every");
+
+require("core-js/modules/es.typed-array.fill");
+
+require("core-js/modules/es.typed-array.filter");
+
+require("core-js/modules/es.typed-array.find");
+
+require("core-js/modules/es.typed-array.find-index");
+
+require("core-js/modules/es.typed-array.for-each");
+
+require("core-js/modules/es.typed-array.from");
+
+require("core-js/modules/es.typed-array.includes");
+
+require("core-js/modules/es.typed-array.index-of");
+
+require("core-js/modules/es.typed-array.iterator");
+
+require("core-js/modules/es.typed-array.join");
+
+require("core-js/modules/es.typed-array.last-index-of");
+
+require("core-js/modules/es.typed-array.map");
+
+require("core-js/modules/es.typed-array.of");
+
+require("core-js/modules/es.typed-array.reduce");
+
+require("core-js/modules/es.typed-array.reduce-right");
+
+require("core-js/modules/es.typed-array.reverse");
+
+require("core-js/modules/es.typed-array.set");
+
+require("core-js/modules/es.typed-array.slice");
+
+require("core-js/modules/es.typed-array.some");
+
+require("core-js/modules/es.typed-array.sort");
+
+require("core-js/modules/es.typed-array.subarray");
+
+require("core-js/modules/es.typed-array.to-locale-string");
+
+require("core-js/modules/es.typed-array.to-string");
+
+require("core-js/modules/es.weak-map");
+
+require("core-js/modules/es.weak-set");
+
+require("core-js/modules/esnext.aggregate-error");
+
+require("core-js/modules/esnext.array.last-index");
+
+require("core-js/modules/esnext.array.last-item");
+
+require("core-js/modules/esnext.composite-key");
+
+require("core-js/modules/esnext.composite-symbol");
+
+require("core-js/modules/esnext.global-this");
+
+require("core-js/modules/esnext.map.delete-all");
+
+require("core-js/modules/esnext.map.every");
+
+require("core-js/modules/esnext.map.filter");
+
+require("core-js/modules/esnext.map.find");
+
+require("core-js/modules/esnext.map.find-key");
+
+require("core-js/modules/esnext.map.from");
+
+require("core-js/modules/esnext.map.group-by");
+
+require("core-js/modules/esnext.map.includes");
+
+require("core-js/modules/esnext.map.key-by");
+
+require("core-js/modules/esnext.map.key-of");
+
+require("core-js/modules/esnext.map.map-keys");
+
+require("core-js/modules/esnext.map.map-values");
+
+require("core-js/modules/esnext.map.merge");
+
+require("core-js/modules/esnext.map.of");
+
+require("core-js/modules/esnext.map.reduce");
+
+require("core-js/modules/esnext.map.some");
+
+require("core-js/modules/esnext.map.update");
+
+require("core-js/modules/esnext.math.clamp");
+
+require("core-js/modules/esnext.math.deg-per-rad");
+
+require("core-js/modules/esnext.math.degrees");
+
+require("core-js/modules/esnext.math.fscale");
+
+require("core-js/modules/esnext.math.iaddh");
+
+require("core-js/modules/esnext.math.imulh");
+
+require("core-js/modules/esnext.math.isubh");
+
+require("core-js/modules/esnext.math.rad-per-deg");
+
+require("core-js/modules/esnext.math.radians");
+
+require("core-js/modules/esnext.math.scale");
+
+require("core-js/modules/esnext.math.seeded-prng");
+
+require("core-js/modules/esnext.math.signbit");
+
+require("core-js/modules/esnext.math.umulh");
+
+require("core-js/modules/esnext.number.from-string");
+
+require("core-js/modules/esnext.observable");
+
+require("core-js/modules/esnext.promise.all-settled");
+
+require("core-js/modules/esnext.promise.any");
+
+require("core-js/modules/esnext.promise.try");
+
+require("core-js/modules/esnext.reflect.define-metadata");
+
+require("core-js/modules/esnext.reflect.delete-metadata");
+
+require("core-js/modules/esnext.reflect.get-metadata");
+
+require("core-js/modules/esnext.reflect.get-metadata-keys");
+
+require("core-js/modules/esnext.reflect.get-own-metadata");
+
+require("core-js/modules/esnext.reflect.get-own-metadata-keys");
+
+require("core-js/modules/esnext.reflect.has-metadata");
+
+require("core-js/modules/esnext.reflect.has-own-metadata");
+
+require("core-js/modules/esnext.reflect.metadata");
+
+require("core-js/modules/esnext.set.add-all");
+
+require("core-js/modules/esnext.set.delete-all");
+
+require("core-js/modules/esnext.set.difference");
+
+require("core-js/modules/esnext.set.every");
+
+require("core-js/modules/esnext.set.filter");
+
+require("core-js/modules/esnext.set.find");
+
+require("core-js/modules/esnext.set.from");
+
+require("core-js/modules/esnext.set.intersection");
+
+require("core-js/modules/esnext.set.is-disjoint-from");
+
+require("core-js/modules/esnext.set.is-subset-of");
+
+require("core-js/modules/esnext.set.is-superset-of");
+
+require("core-js/modules/esnext.set.join");
+
+require("core-js/modules/esnext.set.map");
+
+require("core-js/modules/esnext.set.of");
+
+require("core-js/modules/esnext.set.reduce");
+
+require("core-js/modules/esnext.set.some");
+
+require("core-js/modules/esnext.set.symmetric-difference");
+
+require("core-js/modules/esnext.set.union");
+
+require("core-js/modules/esnext.string.at");
+
+require("core-js/modules/esnext.string.code-points");
+
+require("core-js/modules/esnext.string.match-all");
+
+require("core-js/modules/esnext.string.replace-all");
+
+require("core-js/modules/esnext.symbol.dispose");
+
+require("core-js/modules/esnext.symbol.observable");
+
+require("core-js/modules/esnext.symbol.pattern-match");
+
+require("core-js/modules/esnext.weak-map.delete-all");
+
+require("core-js/modules/esnext.weak-map.from");
+
+require("core-js/modules/esnext.weak-map.of");
+
+require("core-js/modules/esnext.weak-set.add-all");
+
+require("core-js/modules/esnext.weak-set.delete-all");
+
+require("core-js/modules/esnext.weak-set.from");
+
+require("core-js/modules/esnext.weak-set.of");
+
+require("core-js/modules/web.dom-collections.for-each");
+
+require("core-js/modules/web.dom-collections.iterator");
+
+require("core-js/modules/web.immediate");
+
+require("core-js/modules/web.queue-microtask");
+
+require("core-js/modules/web.url");
+
+require("core-js/modules/web.url.to-json");
+
+require("core-js/modules/web.url-search-params");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+//如果用了usage，preset-env会替换以下代码
+var fn = function fn() {};
+
+new Promise(function () {});
+
+var Test = /*#__PURE__*/function () {
+  function Test() {
+    _classCallCheck(this, Test);
+  }
+
+  _createClass(Test, [{
+    key: "say",
+    value: function say() {}
+  }]);
+
+  return Test;
+}();
+
+var c = [1, 2, 3].includes(1);
+var a = 10;
+
+```
+
+可以看到，我们编译过后的代码中添加了很多polyfill。
+
+#### `useBuiltIns: 'usage'`
+
+使用了usage后，preset-env会自动检测代码，如果需要依赖某个运行时插件的时候，preset-env就会直接依赖，不像entry一样，不管用不用，一股脑全部加载。
+
+我们修改一下配置文件为usage：
+
+babel.config.js
+
+```js
+module.exports = {
+    presets: [
+        [
+            "@babel/preset-env",
+            {
+                corejs: 3,
+                useBuiltIns: 'usage',
+
+            }
+        ]
+    ]
+}
+```
+
+然后我们重新创建一个demo-usage.js文件用来测试，
+
+src/demo-usage.js：
+
+```js
+const fn = () => {};
+
+new Promise(() => {});
+
+class Test {
+    say(){}
+}
+
+const c = [1, 2, 3].includes(1);
+var a = 10;
+
+```
+
+我们运行babel看结果：
+
+```js
+npx babel ./src/demo-usage.js -o lib/demo-usage.js
+```
+
+lib/demo-usage.js:
+
+```js
+"use strict";
+
+require("core-js/modules/es.array.includes");
+
+require("core-js/modules/es.object.to-string");
+
+require("core-js/modules/es.promise");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var fn = function fn() {};
+
+new Promise(function () {});
+
+var Test = /*#__PURE__*/function () {
+  function Test() {
+    _classCallCheck(this, Test);
+  }
+
+  _createClass(Test, [{
+    key: "say",
+    value: function say() {}
+  }]);
+
+  return Test;
+}();
+
+var c = [1, 2, 3].includes(1);
+var a = 10;
+
+```
+
+可以看到，相比entry，preset-env只帮我们导入了我们需要的运行时插件：
+
+```js
+require("core-js/modules/es.array.includes");
+
+require("core-js/modules/es.object.to-string");
+
+require("core-js/modules/es.promise");
+```
+
+#### `useBuiltIns: false`
+
+默认行为，不会使用polyfill。
+
+### `corejs`
+
+`2`, `3` 或者 `{ version: 2 | 3, proposals: boolean }`, 默认 `2`.
+
+前面说了，`useBuiltIns`设置usage或者entry的时候需要依赖core-js做运行时插件注入，`corejs`是设置corejs的版本号。
+
+我们看一下源码，看preset-env是怎样使用`useBuiltIns`做到buildins插件注入的，
+
+packages/babel-preset-env/src/index.js：
+
+```js
+...
+export default declare((api, opts) => {
+ 
+  const {
+    configPath,
+    debug,
+    exclude: optionsExclude,
+    forceAllTransforms,
+    ignoreBrowserslistConfig,
+    include: optionsInclude,
+    loose,
+    modules,
+    shippedProposals,
+    spec,
+    targets: optionsTargets,
+    useBuiltIns,
+    corejs: { version: corejs, proposals },
+  } = normalizeOptions(opts);
+  	//获取buildins插件
+  	const polyfillPlugins = getPolyfillPlugins({
+    useBuiltIns,
+    corejs,
+    polyfillTargets: targets,
+    include: include.builtIns,
+    exclude: exclude.builtIns,
+    proposals,
+    shippedProposals,
+    regenerator: pluginNames.has("transform-regenerator"),
+    debug,
+  });
+}
+```
+
+```js
+export const getPolyfillPlugins = ({
+  useBuiltIns,
+  corejs,
+  polyfillTargets,
+  include,
+  exclude,
+  proposals,
+  shippedProposals,
+  regenerator,
+  debug,
+}: {
+  useBuiltIns: BuiltInsOption,
+  corejs: typeof SemVer | null | false,
+  polyfillTargets: Targets,
+  include: Set<string>,
+  exclude: Set<string>,
+  proposals: boolean,
+  shippedProposals: boolean,
+  regenerator: boolean,
+  debug: boolean,
+}) => {
+  const polyfillPlugins = [];
+  //当useBuiltIns设置usage或者entry的时候
+  if (useBuiltIns === "usage" || useBuiltIns === "entry") {
+    const pluginOptions = {
+      corejs,
+      polyfillTargets,
+      include,
+      exclude,
+      proposals,
+      shippedProposals,
+      regenerator,
+      debug,
+    };
+    if (corejs) {
+      //如果是usage的时候
+      if (useBuiltIns === "usage") {
+        //corejs的版本为2的时候
+        if (corejs.major === 2) {
+          //添加addCoreJS2UsagePlugin插件到preset-env的presets
+          polyfillPlugins.push([addCoreJS2UsagePlugin, pluginOptions]);
+        } else {
+           //添加addCoreJS3UsagePlugin插件到preset-env的presets
+          polyfillPlugins.push([addCoreJS3UsagePlugin, pluginOptions]);
+        }
+        //代码中是否有generator语法，有就添加addRegeneratorUsagePlugin插件
+        if (regenerator) {
+          polyfillPlugins.push([addRegeneratorUsagePlugin, pluginOptions]);
+        }
+      } else {//如果是entry的时候
+        //corejs的版本为2的时候
+        if (corejs.major === 2) {
+          //添加replaceCoreJS2EntryPlugin插件到preset-env的presets
+          polyfillPlugins.push([replaceCoreJS2EntryPlugin, pluginOptions]);
+        } else {
+           //添加replaceCoreJS3EntryPlugin插件到preset-env的presets
+          polyfillPlugins.push([replaceCoreJS3EntryPlugin, pluginOptions]);
+          if (!regenerator) {
+            polyfillPlugins.push([removeRegeneratorEntryPlugin, pluginOptions]);
+          }
+        }
+      }
+    }
+  }
+  return polyfillPlugins;
+};
+```
+
+代码中都有注释，getPolyfillPlugins会根据useBuiltIns的配置加载不同的插件，比如我们的配置文件，
+
+babel.config.js：
+
+```js
+module.exports = {
+    presets: [
+        [
+            "@babel/preset-env",
+            {
+                corejs: 3,
+                useBuiltIns: 'usage',
+            }
+        ]
+    ]
+};
+```
+
+getPolyfillPlugins方法会走以下代码：
+
+```js
+ //添加addCoreJS3UsagePlugin插件到preset-env的presets
+          polyfillPlugins.push([addCoreJS3UsagePlugin, pluginOptions]);
+```
+
+我们看一下addCoreJS3UsagePlugin是什么，
+
+packages/babel-preset-env/src/polyfills/corejs3/usage-plugin.js：
+
+```js
+import corejs3Polyfills from "core-js-compat/data";
+import corejs3ShippedProposalsList from "./shipped-proposals";
+import getModulesListForTargetVersion from "core-js-compat/get-modules-list-for-target-version";
+import filterItems from "../../filter-items";
+import {
+  BuiltIns,
+  StaticProperties,
+  InstanceProperties,
+  CommonIterators,
+  CommonInstanceDependencies,
+  PromiseDependencies,
+  PossibleGlobalObjects,
+} from "./built-in-definitions";
+import {
+  createImport,
+  getType,
+  has,
+  intersection,
+  isPolyfillSource,
+  getImportSource,
+  getRequireSource,
+  isNamespaced,
+} from "../../utils";
+import { logUsagePolyfills } from "../../debug";
+
+import type { InternalPluginOptions } from "../../types";
+import type { NodePath } from "@babel/traverse";
+
+const NO_DIRECT_POLYFILL_IMPORT = `
+  When setting \`useBuiltIns: 'usage'\`, polyfills are automatically imported when needed.
+  Please remove the direct import of \`core-js\` or use \`useBuiltIns: 'entry'\` instead.`;
+
+const corejs3PolyfillsWithoutProposals = Object.keys(corejs3Polyfills)
+  .filter(name => !name.startsWith("esnext."))
+  .reduce((memo, key) => {
+    memo[key] = corejs3Polyfills[key];
+    return memo;
+  }, {});
+
+const corejs3PolyfillsWithShippedProposals = corejs3ShippedProposalsList.reduce(
+  (memo, key) => {
+    memo[key] = corejs3Polyfills[key];
+    return memo;
+  },
+  { ...corejs3PolyfillsWithoutProposals },
+);
+
+export default function(
+  _: any,
+  {
+    corejs,
+    include,
+    exclude,
+    polyfillTargets,
+    proposals,
+    shippedProposals,
+    debug,
+  }: InternalPluginOptions,
+) {
+  const polyfills = filterItems(
+    proposals
+      ? corejs3Polyfills
+      : shippedProposals
+      ? corejs3PolyfillsWithShippedProposals
+      : corejs3PolyfillsWithoutProposals,
+    include,
+    exclude,
+    polyfillTargets,
+    null,
+  );
+	...
+}
+```
+
+我们看到，首先是获取所有的polyfills，我们顺便把`corejs`的proposal参数跟`shippedProposals`参数一起讲了，
+
+### `corejs`（proposal）& `shippedProposals`
+
+我们可以看到代码：
+
+```js
+const polyfills = filterItems(
+    proposals
+      ? corejs3Polyfills
+      : shippedProposals
+      ? corejs3PolyfillsWithShippedProposals
+      : corejs3PolyfillsWithoutProposals,
+    include,
+    exclude,
+    polyfillTargets,
+    null,
+  );
+```
+
+proposals默认为false，我们demo中也是默认设置false，所以会走：
+
+```js
+shippedProposals
+      ? corejs3PolyfillsWithShippedProposals
+      : corejs3PolyfillsWithoutProposals
+```
+
+我们demo中shippedProposals也是false，所以直接返回一个corejs3PolyfillsWithoutProposals数组，我们看一下corejs3PolyfillsWithoutProposals，
+
+packages/babel-preset-env/src/polyfills/corejs3/usage-plugin.js：
+
+```js
+const corejs3PolyfillsWithoutProposals = Object.keys(corejs3Polyfills)
+  .filter(name => !name.startsWith("esnext."))
+  .reduce((memo, key) => {
+    memo[key] = corejs3Polyfills[key];
+    return memo;
+  }, {});
+```
+
+会遍历corejs3Polyfills集合，然后过滤掉“esnext.”打头的插件，
+
+```js
+import corejs3Polyfills from "core-js-compat/data";
+```
+
+node_modules/core-js-compat/data.json:
+
+```js
+{
+  ...
+  "es.promise": {
+    "chrome": "67",
+    "edge": "74",
+    "electron": "4.0",
+    "firefox": "69",
+    "ios": "11.0",
+    "node": "10.4",
+    "opera": "54",
+    "opera_mobile": "48",
+    "safari": "11.0",
+    "samsung": "9.0"
+  }
+  ...
+}
+```
+
+内容有点多，我就只截取了一个，比如我们的promise，那如果设置了proposals为true的话，会直接使用corejs3Polyfills集合，如果proposals为false并且shippedProposals为true的时候，polyfills返回的就是corejs3PolyfillsWithShippedProposals集合，corejs3PolyfillsWithShippedProposals集合是corejs3PolyfillsWithoutProposals跟corejs3ShippedProposalsList集合的并集，
+
+```js
+const corejs3PolyfillsWithShippedProposals = corejs3ShippedProposalsList.reduce(
+  (memo, key) => {
+    memo[key] = corejs3Polyfills[key];
+    return memo;
+  },
+  { ...corejs3PolyfillsWithoutProposals },
+);
+```
+
+那么corejs3ShippedProposalsList里面默认有哪些插件呢？
+
+packages/babel-preset-env/src/polyfills/corejs3/shipped-proposals.js：
+
+```js
+// @flow
+
+export default (["esnext.global-this", "esnext.string.match-all"]: string[]);
+
+```
+
+其实就两个，一个是global对象，还有一个就是string的matchAll方法.所以只有当corejs的proposals的时候`shippedProposals`配置才会起作用。
+
+我们已经根据浏览器配置和corejs的参数还有`shippedProposals`参数获取到了我们当前环境所需要的所有插件，那么当使用usage的时候，usage-plugin.js是怎样根据代码加载对应的插件的呢？
+
+比如我们demo-usage.js代码中的：
+
+```js
+new Promise(() => {});
+```
+
+也就是说当usage-plugin插件加载到Promise的时候，这个时候就需要判断当前环境是不是需要添"Promise"的polyfill了
+
+packages/babel-preset-env/src/polyfills/corejs3/usage-plugin.js：
+
+```js
+   // Symbol(), new Promise
+    ReferencedIdentifier({ node: { name }, scope }: NodePath) {
+      if (scope.getBindingIdentifier(name)) return;
+
+      this.addBuiltInDependencies(name);
+    },
+```
+
+代码中添加了ast节点钩子函数，也就是当读到new Promise(() => {});的时候会触发这个钩子函数，name就是Promise,然后会调用addBuiltInDependencies方法：
+
+```js
+ this.addBuiltInDependencies = function(builtIn) {
+   	//判断BuiltIns集合中有没有“Promise”
+        if (has(BuiltIns, builtIn)) {
+          //有的话就去BuiltIns中获取“Promise”
+          const BuiltInDependencies = BuiltIns[builtIn];
+          this.addUnsupported(BuiltInDependencies);
+        }
+      };
+
+```
+
+我们看一下BuiltIns集合，
+
+```js
+export const BuiltIns: ObjectMap<string[]> = {
+  AggregateError: ["esnext.aggregate-error", ...CommonIterators],
+  ArrayBuffer: [
+    "es.array-buffer.constructor",
+    "es.array-buffer.slice",
+    "es.object.to-string",
+  ],
+  DataView: ["es.data-view", "es.array-buffer.slice", "es.object.to-string"],
+  Date: ["es.date.to-string"],
+  Float32Array: ["es.typed-array.float32-array", ...TypedArrayDependencies],
+  Float64Array: ["es.typed-array.float64-array", ...TypedArrayDependencies],
+  Int8Array: ["es.typed-array.int8-array", ...TypedArrayDependencies],
+  Int16Array: ["es.typed-array.int16-array", ...TypedArrayDependencies],
+  Int32Array: ["es.typed-array.int32-array", ...TypedArrayDependencies],
+  Uint8Array: ["es.typed-array.uint8-array", ...TypedArrayDependencies],
+  Uint8ClampedArray: [
+    "es.typed-array.uint8-clamped-array",
+    ...TypedArrayDependencies,
+  ],
+  Uint16Array: ["es.typed-array.uint16-array", ...TypedArrayDependencies],
+  Uint32Array: ["es.typed-array.uint32-array", ...TypedArrayDependencies],
+  Map: MapDependencies,
+  Number: ["es.number.constructor"],
+  Observable: [
+    "esnext.observable",
+    "esnext.symbol.observable",
+    "es.object.to-string",
+    ...CommonIteratorsWithTag,
+  ],
+  Promise: PromiseDependencies,
+  RegExp: ["es.regexp.constructor", "es.regexp.exec", "es.regexp.to-string"],
+  Set: SetDependencies,
+  Symbol: SymbolDependencies,
+  URL: ["web.url", ...URLSearchParamsDependencies],
+  URLSearchParams: URLSearchParamsDependencies,
+  WeakMap: WeakMapDependencies,
+  WeakSet: WeakSetDependencies,
+  clearImmediate: ["web.immediate"],
+  compositeKey: ["esnext.composite-key"],
+  compositeSymbol: ["esnext.composite-symbol", ...SymbolDependencies],
+  fetch: PromiseDependencies,
+  globalThis: ["esnext.global-this"],
+  parseFloat: ["es.parse-float"],
+  parseInt: ["es.parse-int"],
+  queueMicrotask: ["web.queue-microtask"],
+  setTimeout: ["web.timers"],
+  setInterval: ["web.timers"],
+  setImmediate: ["web.immediate"],
+};
+```
+
+我们找到Promise:
+
+```js
+export const PromiseDependencies = ["es.promise", "es.object.to-string"];
+export const BuiltIns: ObjectMap<string[]> = {
+  ...
+	Promise: PromiseDependencies,
+  ...
+}
+```
+
+可以看到，Promise依赖了两个插件：“es.promise”跟“es.object.to-string”，就是这样我们的demo-usage.js编译完毕后会自动导入这两个插件：
+
+lib/demo-usage.js
+
+```js
+"use strict";
+
+require("core-js/modules/es.array.includes");
+
+require("core-js/modules/es.object.to-string");
+
+require("core-js/modules/es.promise");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var fn = function fn() {};
+
+new Promise(function () {});
+
+var Test = /*#__PURE__*/function () {
+  function Test() {
+    _classCallCheck(this, Test);
+  }
+
+  _createClass(Test, [{
+    key: "say",
+    value: function say() {}
+  }]);
+
+  return Test;
+}();
+
+var c = [1, 2, 3].includes(1);
+var a = 10;
+
+```
+
+useBuildIns的entry我就不带着看源码了，跟usage差不多，也就是当遍历到“import corejs”节点的时候使用corejs3Polyfills替换掉它，小伙伴自己去看源码哦。
+
+### `configPath`
+
+告诉preset-env从哪里开始寻找browserslist的配置，一直往上一级递归直到找到配置文件，默认是根目录。
+
+### `ignoreBrowserslistConfig`
+
+是否禁止寻找 [browserslist](https://github.com/ai/browserslist#queries)配置文件，默认是false
+
+OK～ 我们用了一篇很长的文章介绍了babel的preset-env，是真的很长啊，有些地方可能不太好理解，因为源码实在是太多了，我也没法把所有的源码都贴过来，小伙伴一定要结合文章demo然后去看源码，相信我，你会有不一样的收获的，下节我们介绍babel-plugin-transfrom-runtime跟babel-runtime，然后对比preset-env，大家敬请期待！！
