@@ -144,7 +144,7 @@ function* helloWorldGenerator() {
 
 ```
 
-可以看到，自动帮我们引入了一个polyfill（_Promise），那小伙伴要疑问了，es6的语法没转换？是的！ 因为runtime不做这些语法的转换，它只能算是一个转换帮助工具、一个自动添加polyfill的工具，es6语法转换我们上一节用了preset-env，所以我们把preset-env的语法转换模块加上，把polyfill去掉,runtime配置还原到默认配置，
+可以看到，自动帮我们引入了一个polyfill（_Promise），那小伙伴要疑问了，es6的语法没转换？是的！ 因为runtime不做这些语法的转换，它只能算是一个转换帮助类、一个自动添加polyfill的工具，es6语法转换我们上一节用了preset-env，所以我们把preset-env加上，然后把polyfill去掉,最后runtime配置还原到默认配置，
 
 babel.config.js:
 
